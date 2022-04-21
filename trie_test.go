@@ -75,27 +75,31 @@ func TestReplace(t *testing.T) {
 }
 
 func TestOverlaps(t *testing.T) {
-	text := "12345"
-	trie := NewTrie("1", "2", "12", "23", "34", "45", "123")
+	text := "a123,456b"
+	trie := NewTrie("123", "12", "23", "456", "45", "56")
 	emits := trie.FindAll(text, false)
 	removed := RemoveOverlaps(emits)
 	fmt.Println(emits)
 	fmt.Println(removed)
-	EqualEmit(t, removed[0], 0, 3, "123")
-	EqualEmit(t, removed[1], 3, 5, "45")
-
+	EqualEmit(t, removed[0], 1, 4, "123")
+	EqualEmit(t, removed[1], 5, 8, "456")
+	EqualInt(t, 6, len(emits))
+	EqualInt(t, 2, len(removed))
 }
 
 func TestContains(t *testing.T) {
-	text := "12345"
-	trie := NewTrie("1", "2", "12", "23", "34", "45", "123")
+	text := "a123,456b"
+	trie := NewTrie("12", "23", "45", "56")
 	emits := trie.FindAll(text, false)
 	removed := RemoveContains(emits)
 	fmt.Println(emits)
 	fmt.Println(removed)
-	EqualEmit(t, removed[0], 0, 3, "123")
-	EqualEmit(t, removed[1], 2, 4, "34")
-	EqualEmit(t, removed[2], 3, 5, "45")
+	EqualEmit(t, removed[0], 1, 3, "12")
+	EqualEmit(t, removed[1], 2, 4, "23")
+	EqualEmit(t, removed[2], 5, 7, "45")
+	EqualEmit(t, removed[3], 6, 8, "56")
+	EqualInt(t, 4, len(emits))
+	EqualInt(t, 4, len(removed))
 }
 
 func TestLoad(t *testing.T) {
