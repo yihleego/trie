@@ -433,6 +433,7 @@ func removeEmits(emits []*Emit, predicate func(a, b *Emit) bool) []*Emit {
 		if !predicate(emit, next) {
 			sorted[index] = next
 			index++
+			emit = next
 		}
 	}
 	return sorted[:index]
