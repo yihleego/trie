@@ -1,7 +1,6 @@
 package trie
 
 import (
-	"container/list"
 	"fmt"
 	"sort"
 	"unicode/utf8"
@@ -50,6 +49,10 @@ func (list *List) Size() int {
 	return list.size
 }
 
+func (list *List) IsEmpty() bool {
+	return list.size == 0
+}
+
 func (list *List) ToArray() []any {
 	if list.size == 0 {
 		return []any{}
@@ -71,6 +74,67 @@ func (list *List) grow(minCapacity int) {
 	elements := make([]any, newLength)
 	copy(elements, list.elements)
 	list.elements = elements
+}
+
+type Node struct {
+	next, prev *Node
+	element    any
+}
+
+type Queue struct {
+	first, last *Node
+	size        int
+}
+
+func NewQueue() *Queue {
+	return &Queue{nil, nil, 0}
+}
+
+func (queue *Queue) Add(e any) {
+	node := &Node{nil, nil, e}
+	last := queue.last
+	queue.last = node
+	if queue.first == nil {
+		queue.first = node
+	} else {
+		last.next = node
+	}
+	queue.size++
+}
+
+func (queue *Queue) Poll() any {
+	first := queue.first
+	if first == nil {
+		return nil
+	}
+	element := first.element
+	next := first.next
+	first.element = nil
+	first.next = nil // GC
+	queue.first = next
+	if next == nil {
+		queue.last = nil
+	} else {
+		next.prev = nil
+	}
+	queue.size--
+	return element
+}
+
+func (queue *Queue) Peek() any {
+	if queue.first == nil {
+		return nil
+	} else {
+		return queue.first.element
+	}
+}
+
+func (queue *Queue) Size() int {
+	return queue.size
+}
+
+func (queue *Queue) IsEmpty() bool {
+	return queue.size == 0
 }
 
 type Emit struct {
@@ -210,25 +274,25 @@ type Trie struct {
 	root *State
 }
 
-func NewTrie(keywords []string) *Trie {
+func NewTrie(keywords ...string) *Trie {
 	t := Trie{root: NewState(0)}
-	t.Load(keywords)
+	t.Load(keywords...)
 	return &t
 }
 
-func (t *Trie) Load(keywords []string) *Trie {
+func (t *Trie) Load(keywords ...string) *Trie {
 	for _, keyword := range keywords {
 		if len(keyword) > 0 {
 			t.root.AddState(keyword).AddKeyword(keyword)
 		}
 	}
-	states := list.New()
+	states := NewQueue()
 	for _, state := range t.root.success {
 		state.failure = t.root
-		states.PushBack(state)
+		states.Add(state)
 	}
-	for states.Len() > 0 {
-		state := states.Remove(states.Front()).(*State)
+	for !states.IsEmpty() {
+		state := states.Poll().(*State)
 		if state.success == nil {
 			continue
 		}
@@ -241,7 +305,7 @@ func (t *Trie) Load(keywords []string) *Trie {
 			}
 			next.failure = fn
 			next.AddKeywordList(fn.keywords)
-			states.PushBack(next)
+			states.Add(next)
 		}
 	}
 	return t

@@ -6,9 +6,8 @@ import (
 )
 
 func TestFindAll(t *testing.T) {
-	keywords := []string{"雨疏", "风骤", "残酒", "卷帘人", "知否"}
 	text := "昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，却道海棠依旧。知否，知否？应是绿肥红瘦。"
-	trie := NewTrie(keywords)
+	trie := NewTrie("雨疏", "风骤", "残酒", "卷帘人", "知否")
 	emits := trie.FindAll(text, false)
 	fmt.Println(emits)
 	EqualEmit(t, emits[0], 2, 4, "雨疏")
@@ -20,18 +19,16 @@ func TestFindAll(t *testing.T) {
 }
 
 func TestFindFirst(t *testing.T) {
-	keywords := []string{"雨疏", "风骤", "残酒", "卷帘人", "知否"}
 	text := "昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，却道海棠依旧。知否，知否？应是绿肥红瘦。"
-	trie := NewTrie(keywords)
+	trie := NewTrie("雨疏", "风骤", "残酒", "卷帘人", "知否")
 	emit := trie.FindFirst(text, false)
 	fmt.Println(emit)
 	EqualEmit(t, emit, 2, 4, "雨疏")
 }
 
 func TestFindAllIgnoreCase(t *testing.T) {
-	keywords := []string{"poetry", "TRANSLATION"}
 	text := "Poetry is what gets lost in translation."
-	trie := NewTrie(keywords)
+	trie := NewTrie("poetry", "TRANSLATION")
 	emits := trie.FindAll(text, true)
 	fmt.Println(emits)
 	EqualEmit(t, emits[0], 0, 6, "poetry")
@@ -39,18 +36,16 @@ func TestFindAllIgnoreCase(t *testing.T) {
 }
 
 func TestFindFirstIgnoreCase(t *testing.T) {
-	keywords := []string{"poetry", "TRANSLATION"}
 	text := "Poetry is what gets lost in translation."
-	trie := NewTrie(keywords)
+	trie := NewTrie("poetry", "TRANSLATION")
 	emit := trie.FindFirst(text, true)
 	fmt.Println(emit)
 	EqualEmit(t, emit, 0, 6, "poetry")
 }
 
 func TestTokenize(t *testing.T) {
-	keywords := []string{"溪亭", "归路", "藕花", "争渡"}
 	text := "常记溪亭日暮，沉醉不知归路。兴尽晚回舟，误入藕花深处。争渡，争渡，惊起一滩鸥鹭。"
-	trie := NewTrie(keywords)
+	trie := NewTrie("溪亭", "归路", "藕花", "争渡")
 	emits := trie.FindAll(text, false)
 	tokens := Tokenize(emits, text)
 	fmt.Println(len(tokens), tokens)
@@ -68,9 +63,8 @@ func TestTokenize(t *testing.T) {
 }
 
 func TestReplace(t *testing.T) {
-	keywords := []string{"0元", "砍一刀", "免费拿", "免费领"}
 	text := "我正在参加砍价，砍到0元就可以免费拿啦。亲~帮我砍一刀呗，咱们一起免费领好货。"
-	trie := NewTrie(keywords)
+	trie := NewTrie("0元", "砍一刀", "免费拿", "免费领")
 	emits := trie.FindAll(text, false)
 	r1 := Replace(emits, text, "*")
 	r2 := Replace(emits, text, "@#$%^&*")
@@ -81,9 +75,8 @@ func TestReplace(t *testing.T) {
 }
 
 func TestOverlaps(t *testing.T) {
-	keywords := []string{"1", "2", "12", "23", "34", "45", "123"}
 	text := "12345"
-	trie := NewTrie(keywords)
+	trie := NewTrie("1", "2", "12", "23", "34", "45", "123")
 	emits := trie.FindAll(text, false)
 	removed := RemoveOverlaps(emits)
 	fmt.Println(emits)
@@ -94,9 +87,8 @@ func TestOverlaps(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
-	keywords := []string{"1", "2", "12", "23", "34", "45", "123"}
 	text := "12345"
-	trie := NewTrie(keywords)
+	trie := NewTrie("1", "2", "12", "23", "34", "45", "123")
 	emits := trie.FindAll(text, false)
 	removed := RemoveContains(emits)
 	fmt.Println(emits)
@@ -104,6 +96,48 @@ func TestContains(t *testing.T) {
 	EqualEmit(t, removed[0], 0, 3, "123")
 	EqualEmit(t, removed[1], 2, 4, "34")
 	EqualEmit(t, removed[2], 3, 5, "45")
+}
+
+func TestLoad(t *testing.T) {
+	text := "Hello, World!"
+	trie := NewTrie()
+	trie.Load("hello", "world")
+	emits := trie.FindAll(text, true)
+	fmt.Println(emits)
+	EqualEmit(t, emits[0], 0, 5, "hello")
+	EqualEmit(t, emits[1], 7, 12, "world")
+}
+
+func TestList(t *testing.T) {
+	list := NewList(0)
+	for i := 0; i < 1000; i++ {
+		list.Add(i)
+	}
+	size := list.Size()
+	for i := 0; i < size; i++ {
+		fmt.Print(list.Get(i), ",")
+	}
+	fmt.Println()
+	EqualInt(t, 1000, size)
+}
+
+func TestQueue(t *testing.T) {
+	queue := NewQueue()
+	for i := 0; i < 1000; i++ {
+		queue.Add(i)
+	}
+	size := queue.Size()
+	for !queue.IsEmpty() {
+		fmt.Print(queue.Poll(), ",")
+	}
+	fmt.Println()
+	EqualInt(t, 1000, size)
+}
+
+func EqualInt(t *testing.T, expected int, actual int) {
+	if expected != actual {
+		t.Error(expected, actual)
+	}
 }
 
 func EqualString(t *testing.T, expected string, actual string) {

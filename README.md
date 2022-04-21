@@ -11,7 +11,7 @@ Java实现版本：[Trie4j](https://github.com/yihleego/trie4j)
 ### 匹配所有关键词
 
 ```go
-trie := NewTrie([]string{"雨疏", "风骤", "残酒", "卷帘人", "知否"})
+trie := NewTrie("雨疏", "风骤", "残酒", "卷帘人", "知否")
 emits := trie.FindAll("昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，却道海棠依旧。知否，知否？应是绿肥红瘦。", false)
 ```
 
@@ -22,8 +22,8 @@ emits := trie.FindAll("昨夜雨疏风骤，浓睡不消残酒。试问卷帘人
 ### 匹配首个关键词
 
 ```go
-trie := NewTrie([]string{"雨疏", "风骤", "残酒", "卷帘人", "知否"})
-emits := trie.FindFirst("昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，却道海棠依旧。知否，知否？应是绿肥红瘦。", false)
+trie := NewTrie("雨疏", "风骤", "残酒", "卷帘人", "知否")
+emit := trie.FindFirst("昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，却道海棠依旧。知否，知否？应是绿肥红瘦。", false)
 ```
 
 ```text
@@ -33,7 +33,7 @@ emits := trie.FindFirst("昨夜雨疏风骤，浓睡不消残酒。试问卷帘�
 ### 匹配所有关键词 忽略大小写
 
 ```go
-trie := NewTrie([]string{"poetry", "TRANSLATION"})
+trie := NewTrie("poetry", "TRANSLATION")
 emits := trie.FindAll("Poetry is what gets lost in translation.", true)
 ```
 
@@ -44,8 +44,8 @@ emits := trie.FindAll("Poetry is what gets lost in translation.", true)
 ### 匹配首个关键词 忽略大小写
 
 ```go
-trie := NewTrie([]string{"poetry", "TRANSLATION"})
-emits := trie.FindFirst("Poetry is what gets lost in translation.", true)
+trie := NewTrie("poetry", "TRANSLATION")
+emit := trie.FindFirst("Poetry is what gets lost in translation.", true)
 ```
 
 ```text
@@ -55,7 +55,7 @@ emits := trie.FindFirst("Poetry is what gets lost in translation.", true)
 ### 切分词
 
 ```go
-trie := NewTrie([]string{"溪亭", "归路", "藕花", "争渡"})
+trie := NewTrie("溪亭", "归路", "藕花", "争渡")
 emits := trie.FindAll("常记溪亭日暮，沉醉不知归路。兴尽晚回舟，误入藕花深处。争渡，争渡，惊起一滩鸥鹭。", false)
 tokens := Tokenize(emits, text)
 ```
@@ -67,7 +67,7 @@ tokens := Tokenize(emits, text)
 ### 替换关键词
 
 ```go
-trie := NewTrie([]string{"0元", "砍一刀", "免费拿", "免费领"})
+trie := NewTrie("0元", "砍一刀", "免费拿", "免费领")
 emits := trie.FindAll("我正在参加砍价，砍到0元就可以免费拿啦。亲~帮我砍一刀呗，咱们一起免费领好货。", false)
 r1 := Replace(emits, text, "*")
 r2 := Replace(emits, text, "@#$%^&*")
