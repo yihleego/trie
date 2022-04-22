@@ -3,6 +3,7 @@ package trie
 import (
 	"fmt"
 	"sort"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -215,10 +216,10 @@ func (s *State) GetState(c rune, ignoreCase bool) *State {
 	}
 	if ignoreCase {
 		cc := c
-		if isLowerCase(c) {
-			cc = toUpperCase(c)
-		} else if isUpperCase(c) {
-			cc = toLowerCase(c)
+		if unicode.IsLower(c) {
+			cc = unicode.ToUpper(c)
+		} else if unicode.IsUpper(c) {
+			cc = unicode.ToLower(c)
 		}
 		if c != cc {
 			next := s.success[cc]
@@ -449,22 +450,6 @@ func sortEmits(emits []*Emit) {
 			return a.End > b.End
 		}
 	})
-}
-
-func isLowerCase(c rune) bool {
-	return c >= 'a' && c <= 'z'
-}
-
-func isUpperCase(c rune) bool {
-	return c >= 'A' && c <= 'Z'
-}
-
-func toLowerCase(c rune) rune {
-	return c + 32
-}
-
-func toUpperCase(c rune) rune {
-	return c - 32
 }
 
 func max(a int, b int) int {

@@ -43,6 +43,17 @@ func TestFindFirstIgnoreCase(t *testing.T) {
 	EqualEmit(t, emit, 0, 6, "poetry")
 }
 
+func TestIgnoreCase(t *testing.T) {
+	text := "TurninG OnCe AgAiN BÖRKÜ"
+	trie := NewTrie("turning", "once", "again", "börkü")
+	emits := trie.FindAll(text, true)
+	fmt.Println(emits)
+	EqualEmit(t, emits[0], 0, 7, "turning")
+	EqualEmit(t, emits[1], 8, 12, "once")
+	EqualEmit(t, emits[2], 13, 18, "again")
+	EqualEmit(t, emits[3], 19, 24, "börkü")
+}
+
 func TestTokenize(t *testing.T) {
 	text := "常记溪亭日暮，沉醉不知归路。兴尽晚回舟，误入藕花深处。争渡，争渡，惊起一滩鸥鹭。"
 	trie := NewTrie("溪亭", "归路", "藕花", "争渡")

@@ -1,10 +1,16 @@
 # Trie
 
-基于AC自动机（Aho-Corasick automaton）实现的关键词、敏感词、停用词等匹配工具。
-
-[Aho–Corasick](http://cr.yp.to/bib/1975/aho.pdf) 算法是 Alfred V. Aho 和 Margaret J. Corasick 在 1975 年发明的一种字符串搜索算法。它是一种字典匹配算法，可在输入文本中定位有限字符串集（字典）的元素。它同时匹配所有字符串。该算法的复杂性与字符串长度加上搜索文本的长度加上输出匹配的数量成线性关系。
+基于AC自动机（Aho-Corasick algorithm）实现的关键词、敏感词、非法词、停用词等匹配替换工具。支持结果分词，忽略大小写，替换文本等功能。
 
 Java实现版本：[Trie4j](https://github.com/yihleego/trie4j)
+
+## Introduction
+
+判断一个字符串是否包含另一个字符串，我们通常使用`strings.Index()`或`strings.Contains()`进行判断，其底层实现基于RK、KMP、BM和Sunday等算法。如果要判断一个字符串是否包含多个字符串，比如在一篇文章找几个敏感词，继续使用上述的字符串搜索算法显然是不合适，这种场景就需要用到多模式匹配算法。
+
+[Aho–Corasick](http://cr.yp.to/bib/1975/aho.pdf) 算法是由贝尔实验室的 Alfred V. Aho 和 Margaret J. Corasick 在 1975 年发明的一种字符串搜索算法。它是一种字典匹配算法，可在输入文本中定位有限字符串集（字典）的元素。它同时匹配所有字符串。该算法的复杂性与字符串长度加上搜索文本的长度加上输出匹配的数量成线性关系。
+
+该算法主要依靠构造一个有限状态机来实现，然后通过失配指针在查找字符串失败时进行回退，转向某前缀的其他分支，免于重复匹配前缀，提高算法效率。
 
 ## Usage
 
