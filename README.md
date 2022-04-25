@@ -1,6 +1,10 @@
 # Trie
 
-基于AC自动机（Aho-Corasick algorithm）实现的关键词、敏感词、非法词、停用词等匹配替换工具。支持结果分词，忽略大小写，替换文本等功能。
+A Aho-Corasick algorithm based string-searching utility for Go. It supports tokenization, ignoring case, replacing text. So you can use it to find keywords in an article, filter sensitive words, etc. 
+
+Implemented in Java：[Trie4j](https://github.com/yihleego/trie4j)
+
+基于AC自动机（Aho-Corasick algorithm）实现的关键词、敏感词、非法词、停用词等匹配替换工具，支持结果分词，忽略大小写，替换文本等功能。适用于在文章中查找关键词；过滤聊天、评论、留言中的敏感词等。
 
 Java实现版本：[Trie4j](https://github.com/yihleego/trie4j)
 
