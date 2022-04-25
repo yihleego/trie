@@ -13,13 +13,11 @@ type List struct {
 }
 
 func NewList(capacity int) *List {
-	var elements []any
 	if capacity > 0 {
-		elements = make([]any, capacity)
+		return &List{elements: make([]any, capacity), size: 0}
 	} else {
-		elements = nil
+		return &List{elements: nil, size: 0}
 	}
-	return &List{elements: elements, size: 0}
 }
 
 func (list *List) Get(i int) any {
@@ -313,23 +311,25 @@ func (t *Trie) Load(keywords ...string) *Trie {
 }
 
 func (t *Trie) FindAll(text string, ignoreCase bool) []*Emit {
-	emits := NewList(0)
+	size := 0
+	emits := make([]*Emit, 10)
 	state := t.root
 	runes := []rune(text)
 	for i := 0; i < len(runes); i++ {
 		r := runes[i]
 		state = t.nextState(state, r, ignoreCase)
 		for j := 0; j < state.keywords.Size(); j++ {
-			v := state.keywords.Get(j)
-			kw := v.(string)
-			emits.Add(&Emit{i - strlen(kw) + 1, i + 1, kw})
+			kw := state.keywords.Get(j).(string)
+			if size == len(emits) {
+				old := emits
+				emits = make([]*Emit, size+size>>1)
+				copy(emits, old)
+			}
+			emits[size] = &Emit{i - strlen(kw) + 1, i + 1, kw}
+			size++
 		}
 	}
-	array := make([]*Emit, emits.Size())
-	for i := 0; i < emits.Size(); i++ {
-		array[i] = emits.Get(i).(*Emit)
-	}
-	return array
+	return emits[:size]
 }
 
 func (t *Trie) FindFirst(text string, ignoreCase bool) *Emit {
@@ -339,8 +339,7 @@ func (t *Trie) FindFirst(text string, ignoreCase bool) *Emit {
 		r := runes[i]
 		state = t.nextState(state, r, ignoreCase)
 		if state.keywords.Size() > 0 {
-			v := state.keywords.Get(0)
-			kw := v.(string)
+			kw := state.keywords.Get(0).(string)
 			return &Emit{i - strlen(kw) + 1, i + 1, kw}
 		}
 	}

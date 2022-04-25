@@ -16,6 +16,7 @@ func TestFindAll(t *testing.T) {
 	EqualEmit(t, emits[3], 16, 19, "卷帘人")
 	EqualEmit(t, emits[4], 27, 29, "知否")
 	EqualEmit(t, emits[5], 30, 32, "知否")
+	EqualInt(t, 6, len(emits))
 }
 
 func TestFindFirst(t *testing.T) {
@@ -33,6 +34,7 @@ func TestFindAllIgnoreCase(t *testing.T) {
 	fmt.Println(emits)
 	EqualEmit(t, emits[0], 0, 6, "poetry")
 	EqualEmit(t, emits[1], 28, 39, "TRANSLATION")
+	EqualInt(t, 2, len(emits))
 }
 
 func TestFindFirstIgnoreCase(t *testing.T) {
@@ -52,6 +54,7 @@ func TestIgnoreCase(t *testing.T) {
 	EqualEmit(t, emits[1], 8, 12, "once")
 	EqualEmit(t, emits[2], 13, 18, "again")
 	EqualEmit(t, emits[3], 19, 24, "börkü")
+	EqualInt(t, 4, len(emits))
 }
 
 func TestTokenize(t *testing.T) {
@@ -71,6 +74,7 @@ func TestTokenize(t *testing.T) {
 	EqualToken(t, tokens[8], -1, -1, "，")
 	EqualToken(t, tokens[9], 30, 32, "争渡")
 	EqualToken(t, tokens[10], -1, -1, "，惊起一滩鸥鹭。")
+	EqualInt(t, 5, len(emits))
 }
 
 func TestReplace(t *testing.T) {
@@ -83,6 +87,7 @@ func TestReplace(t *testing.T) {
 	fmt.Println(r2)
 	EqualString(t, "我正在参加砍价，砍到**就可以***啦。亲~帮我***呗，咱们一起***好货。", r1)
 	EqualString(t, "我正在参加砍价，砍到%^就可以#$%啦。亲~帮我%^&呗，咱们一起&*@好货。", r2)
+	EqualInt(t, 4, len(emits))
 }
 
 func TestOverlaps(t *testing.T) {
@@ -121,6 +126,7 @@ func TestLoad(t *testing.T) {
 	fmt.Println(emits)
 	EqualEmit(t, emits[0], 0, 5, "hello")
 	EqualEmit(t, emits[1], 7, 12, "world")
+	EqualInt(t, 2, len(emits))
 }
 
 func TestList(t *testing.T) {
