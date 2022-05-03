@@ -1,140 +1,12 @@
 package trie
 
 import (
+	"container/list"
 	"fmt"
 	"sort"
 	"unicode"
 	"unicode/utf8"
 )
-
-type List struct {
-	elements []any
-	size     int
-}
-
-func NewList(capacity int) *List {
-	if capacity > 0 {
-		return &List{elements: make([]any, capacity), size: 0}
-	} else {
-		return &List{elements: nil, size: 0}
-	}
-}
-
-func (list *List) Get(i int) any {
-	if list.elements == nil || i >= list.size {
-		return nil
-	}
-	return list.elements[i]
-}
-
-func (list *List) Add(e any) {
-	list.ensureCapacity(list.size + 1)
-	list.elements[list.size] = e
-	list.size++
-}
-
-func (list *List) AddAll(c *List) {
-	if c == nil || c.size == 0 {
-		return
-	}
-	list.ensureCapacity(list.size + c.size)
-	for i := 0; i < c.size; i++ {
-		list.elements[list.size] = c.elements[i]
-		list.size++
-	}
-}
-
-func (list *List) Size() int {
-	return list.size
-}
-
-func (list *List) IsEmpty() bool {
-	return list.size == 0
-}
-
-func (list *List) ToArray() []any {
-	if list.size == 0 {
-		return []any{}
-	}
-	elements := make([]any, list.size)
-	copy(elements, list.elements)
-	return elements
-}
-
-func (list *List) ensureCapacity(minCapacity int) {
-	if list.elements == nil || minCapacity >= len(list.elements) {
-		list.grow(max(minCapacity, 10))
-	}
-}
-
-func (list *List) grow(minCapacity int) {
-	oldLength := len(list.elements)
-	newLength := oldLength + max(minCapacity-oldLength, oldLength>>1)
-	elements := make([]any, newLength)
-	copy(elements, list.elements)
-	list.elements = elements
-}
-
-type Node struct {
-	next, prev *Node
-	element    any
-}
-
-type Queue struct {
-	first, last *Node
-	size        int
-}
-
-func NewQueue() *Queue {
-	return &Queue{nil, nil, 0}
-}
-
-func (queue *Queue) Add(e any) {
-	node := &Node{nil, nil, e}
-	last := queue.last
-	queue.last = node
-	if queue.first == nil {
-		queue.first = node
-	} else {
-		last.next = node
-	}
-	queue.size++
-}
-
-func (queue *Queue) Poll() any {
-	first := queue.first
-	if first == nil {
-		return nil
-	}
-	element := first.element
-	next := first.next
-	first.element = nil
-	first.next = nil // GC
-	queue.first = next
-	if next == nil {
-		queue.last = nil
-	} else {
-		next.prev = nil
-	}
-	queue.size--
-	return element
-}
-
-func (queue *Queue) Peek() any {
-	if queue.first == nil {
-		return nil
-	} else {
-		return queue.first.element
-	}
-}
-
-func (queue *Queue) Size() int {
-	return queue.size
-}
-
-func (queue *Queue) IsEmpty() bool {
-	return queue.size == 0
-}
 
 type Emit struct {
 	Begin   int
@@ -183,14 +55,11 @@ type State struct {
 	depth    int
 	success  map[rune]*State
 	failure  *State
-	keywords *List
+	keywords []string
 }
 
 func NewState(depth int) *State {
-	return &State{
-		depth:    depth,
-		keywords: NewList(0),
-	}
+	return &State{depth: depth}
 }
 
 func (s *State) NextState(c rune, ignoreCase bool) *State {
@@ -250,23 +119,13 @@ func (s *State) addState(c rune) *State {
 }
 
 func (s *State) AddKeyword(keyword string) {
-	s.keywords.Add(keyword)
+	s.keywords = append(s.keywords, keyword)
 }
 
 func (s *State) AddKeywords(keywords []string) {
-	if keywords == nil {
-		return
+	if len(keywords) > 0 {
+		s.keywords = append(s.keywords, keywords...)
 	}
-	for _, keyword := range keywords {
-		s.keywords.Add(keyword)
-	}
-}
-
-func (s *State) AddKeywordList(keywords *List) {
-	if keywords == nil {
-		return
-	}
-	s.keywords.AddAll(keywords)
 }
 
 type Trie struct {
@@ -285,13 +144,13 @@ func (t *Trie) Load(keywords ...string) *Trie {
 			t.root.AddState(keyword).AddKeyword(keyword)
 		}
 	}
-	states := NewQueue()
+	states := list.New()
 	for _, state := range t.root.success {
 		state.failure = t.root
-		states.Add(state)
+		states.PushBack(state)
 	}
-	for !states.IsEmpty() {
-		state := states.Poll().(*State)
+	for states.Len() > 0 {
+		state := states.Remove(states.Front()).(*State)
 		if state.success == nil {
 			continue
 		}
@@ -303,33 +162,26 @@ func (t *Trie) Load(keywords ...string) *Trie {
 				fn = f.NextState(c, false)
 			}
 			next.failure = fn
-			next.AddKeywordList(fn.keywords)
-			states.Add(next)
+			next.AddKeywords(fn.keywords)
+			states.PushBack(next)
 		}
 	}
 	return t
 }
 
 func (t *Trie) FindAll(text string, ignoreCase bool) []*Emit {
-	size := 0
-	emits := make([]*Emit, 10)
+	emits := make([]*Emit, 0, 10)
 	state := t.root
 	runes := []rune(text)
 	for i := 0; i < len(runes); i++ {
 		r := runes[i]
 		state = t.nextState(state, r, ignoreCase)
-		for j := 0; j < state.keywords.Size(); j++ {
-			kw := state.keywords.Get(j).(string)
-			if size == len(emits) {
-				old := emits
-				emits = make([]*Emit, size+size>>1)
-				copy(emits, old)
-			}
-			emits[size] = &Emit{i - strlen(kw) + 1, i + 1, kw}
-			size++
+		for j := 0; j < len(state.keywords); j++ {
+			kw := state.keywords[j]
+			emits = append(emits, &Emit{i - strlen(kw) + 1, i + 1, kw})
 		}
 	}
-	return emits[:size]
+	return emits
 }
 
 func (t *Trie) FindFirst(text string, ignoreCase bool) *Emit {
@@ -338,8 +190,8 @@ func (t *Trie) FindFirst(text string, ignoreCase bool) *Emit {
 	for i := 0; i < len(runes); i++ {
 		r := runes[i]
 		state = t.nextState(state, r, ignoreCase)
-		if state.keywords.Size() > 0 {
-			kw := state.keywords.Get(0).(string)
+		if len(state.keywords) > 0 {
+			kw := state.keywords[0]
 			return &Emit{i - strlen(kw) + 1, i + 1, kw}
 		}
 	}
@@ -449,14 +301,6 @@ func sortEmits(emits []*Emit) {
 			return a.End > b.End
 		}
 	})
-}
-
-func max(a int, b int) int {
-	if a > b {
-		return a
-	} else {
-		return b
-	}
 }
 
 func strlen(s string) int {

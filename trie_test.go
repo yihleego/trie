@@ -1,7 +1,6 @@
 package trie
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -9,7 +8,7 @@ func TestFindAll(t *testing.T) {
 	text := "昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，却道海棠依旧。知否，知否？应是绿肥红瘦。"
 	trie := NewTrie("雨疏", "风骤", "残酒", "卷帘人", "知否")
 	emits := trie.FindAll(text, false)
-	fmt.Println(emits)
+	t.Log(emits)
 	EqualEmit(t, emits[0], 2, 4, "雨疏")
 	EqualEmit(t, emits[1], 4, 6, "风骤")
 	EqualEmit(t, emits[2], 11, 13, "残酒")
@@ -23,7 +22,7 @@ func TestFindFirst(t *testing.T) {
 	text := "昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，却道海棠依旧。知否，知否？应是绿肥红瘦。"
 	trie := NewTrie("雨疏", "风骤", "残酒", "卷帘人", "知否")
 	emit := trie.FindFirst(text, false)
-	fmt.Println(emit)
+	t.Log(emit)
 	EqualEmit(t, emit, 2, 4, "雨疏")
 }
 
@@ -31,7 +30,7 @@ func TestFindAllIgnoreCase(t *testing.T) {
 	text := "Poetry is what gets lost in translation."
 	trie := NewTrie("poetry", "TRANSLATION")
 	emits := trie.FindAll(text, true)
-	fmt.Println(emits)
+	t.Log(emits)
 	EqualEmit(t, emits[0], 0, 6, "poetry")
 	EqualEmit(t, emits[1], 28, 39, "TRANSLATION")
 	EqualInt(t, 2, len(emits))
@@ -41,7 +40,7 @@ func TestFindFirstIgnoreCase(t *testing.T) {
 	text := "Poetry is what gets lost in translation."
 	trie := NewTrie("poetry", "TRANSLATION")
 	emit := trie.FindFirst(text, true)
-	fmt.Println(emit)
+	t.Log(emit)
 	EqualEmit(t, emit, 0, 6, "poetry")
 }
 
@@ -49,7 +48,7 @@ func TestIgnoreCase(t *testing.T) {
 	text := "TurninG OnCe AgAiN BÖRKÜ"
 	trie := NewTrie("turning", "once", "again", "börkü")
 	emits := trie.FindAll(text, true)
-	fmt.Println(emits)
+	t.Log(emits)
 	EqualEmit(t, emits[0], 0, 7, "turning")
 	EqualEmit(t, emits[1], 8, 12, "once")
 	EqualEmit(t, emits[2], 13, 18, "again")
@@ -62,7 +61,8 @@ func TestTokenize(t *testing.T) {
 	trie := NewTrie("溪亭", "归路", "藕花", "争渡")
 	emits := trie.FindAll(text, false)
 	tokens := Tokenize(emits, text)
-	fmt.Println(len(tokens), tokens)
+	t.Log(len(emits), emits)
+	t.Log(len(tokens), tokens)
 	EqualToken(t, tokens[0], -1, -1, "常记")
 	EqualToken(t, tokens[1], 2, 4, "溪亭")
 	EqualToken(t, tokens[2], -1, -1, "日暮，沉醉不知")
@@ -75,6 +75,7 @@ func TestTokenize(t *testing.T) {
 	EqualToken(t, tokens[9], 30, 32, "争渡")
 	EqualToken(t, tokens[10], -1, -1, "，惊起一滩鸥鹭。")
 	EqualInt(t, 5, len(emits))
+	EqualInt(t, 11, len(tokens))
 }
 
 func TestReplace(t *testing.T) {
@@ -83,8 +84,9 @@ func TestReplace(t *testing.T) {
 	emits := trie.FindAll(text, false)
 	r1 := Replace(emits, text, "*")
 	r2 := Replace(emits, text, "@#$%^&*")
-	fmt.Println(r1)
-	fmt.Println(r2)
+	t.Log(emits)
+	t.Log(r1)
+	t.Log(r2)
 	EqualString(t, "我正在参加砍价，砍到**就可以***啦。亲~帮我***呗，咱们一起***好货。", r1)
 	EqualString(t, "我正在参加砍价，砍到%^就可以#$%啦。亲~帮我%^&呗，咱们一起&*@好货。", r2)
 	EqualInt(t, 4, len(emits))
@@ -95,8 +97,8 @@ func TestOverlaps(t *testing.T) {
 	trie := NewTrie("123", "12", "23", "456", "45", "56")
 	emits := trie.FindAll(text, false)
 	removed := RemoveOverlaps(emits)
-	fmt.Println(emits)
-	fmt.Println(removed)
+	t.Log(emits)
+	t.Log(removed)
 	EqualEmit(t, removed[0], 1, 4, "123")
 	EqualEmit(t, removed[1], 5, 8, "456")
 	EqualInt(t, 6, len(emits))
@@ -108,8 +110,8 @@ func TestContains(t *testing.T) {
 	trie := NewTrie("12", "23", "45", "56")
 	emits := trie.FindAll(text, false)
 	removed := RemoveContains(emits)
-	fmt.Println(emits)
-	fmt.Println(removed)
+	t.Log(emits)
+	t.Log(removed)
 	EqualEmit(t, removed[0], 1, 3, "12")
 	EqualEmit(t, removed[1], 2, 4, "23")
 	EqualEmit(t, removed[2], 5, 7, "45")
@@ -123,36 +125,10 @@ func TestLoad(t *testing.T) {
 	trie := NewTrie()
 	trie.Load("hello", "world")
 	emits := trie.FindAll(text, true)
-	fmt.Println(emits)
+	t.Log(emits)
 	EqualEmit(t, emits[0], 0, 5, "hello")
 	EqualEmit(t, emits[1], 7, 12, "world")
 	EqualInt(t, 2, len(emits))
-}
-
-func TestList(t *testing.T) {
-	list := NewList(0)
-	for i := 0; i < 1000; i++ {
-		list.Add(i)
-	}
-	size := list.Size()
-	for i := 0; i < size; i++ {
-		fmt.Print(list.Get(i), ",")
-	}
-	fmt.Println()
-	EqualInt(t, 1000, size)
-}
-
-func TestQueue(t *testing.T) {
-	queue := NewQueue()
-	for i := 0; i < 1000; i++ {
-		queue.Add(i)
-	}
-	size := queue.Size()
-	for !queue.IsEmpty() {
-		fmt.Print(queue.Poll(), ",")
-	}
-	fmt.Println()
-	EqualInt(t, 1000, size)
 }
 
 func EqualInt(t *testing.T, expected int, actual int) {
