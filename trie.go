@@ -51,11 +51,16 @@ func (t *Token) String() string {
 	}
 }
 
+type Keyword struct {
+	Value  string
+	Length int
+}
+
 type State struct {
 	depth    int
 	success  map[rune]*State
 	failure  *State
-	keywords []string
+	keywords []*Keyword
 }
 
 func NewState(depth int) *State {
@@ -119,10 +124,10 @@ func (s *State) addState(c rune) *State {
 }
 
 func (s *State) AddKeyword(keyword string) {
-	s.keywords = append(s.keywords, keyword)
+	s.keywords = append(s.keywords, &Keyword{keyword, utf8.RuneCountInString(keyword)})
 }
 
-func (s *State) AddKeywords(keywords []string) {
+func (s *State) AddKeywords(keywords []*Keyword) {
 	if len(keywords) > 0 {
 		s.keywords = append(s.keywords, keywords...)
 	}
@@ -178,7 +183,7 @@ func (t *Trie) FindAll(text string, ignoreCase bool) []*Emit {
 		state = t.nextState(state, r, ignoreCase)
 		for j := 0; j < len(state.keywords); j++ {
 			kw := state.keywords[j]
-			emits = append(emits, &Emit{i - strlen(kw) + 1, i + 1, kw})
+			emits = append(emits, &Emit{i + 1 - kw.Length, i + 1, kw.Value})
 		}
 	}
 	return emits
@@ -192,7 +197,7 @@ func (t *Trie) FindFirst(text string, ignoreCase bool) *Emit {
 		state = t.nextState(state, r, ignoreCase)
 		if len(state.keywords) > 0 {
 			kw := state.keywords[0]
-			return &Emit{i - strlen(kw) + 1, i + 1, kw}
+			return &Emit{i + 1 - kw.Length, i + 1, kw.Value}
 		}
 	}
 	return nil
@@ -228,7 +233,7 @@ func Tokenize(emits []*Emit, source string) []*Token {
 		index = emit.End
 	}
 	last := emits[el-1]
-	if last.End < strlen(source) {
+	if last.End < utf8.RuneCountInString(source) {
 		tokens[count] = &Token{string(runes[last.End:]), nil}
 		count++
 	}
@@ -301,8 +306,4 @@ func sortEmits(emits []*Emit) {
 			return a.End > b.End
 		}
 	})
-}
-
-func strlen(s string) int {
-	return utf8.RuneCountInString(s)
 }
