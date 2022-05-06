@@ -94,41 +94,57 @@ func TestReplace(t *testing.T) {
 
 func TestOverlaps(t *testing.T) {
 	text := "a123,456b"
-	trie := NewTrie("123", "12", "23", "456", "45", "56")
+	trie := NewTrie("123", "12", "23", "45", "56")
 	emits := trie.FindAll(text, false)
+	t.Log(emits)
 	removed := RemoveOverlaps(emits)
 	t.Log(emits)
 	t.Log(removed)
 	EqualEmit(t, removed[0], 1, 4, "123")
-	EqualEmit(t, removed[1], 5, 8, "456")
-	EqualInt(t, 6, len(emits))
+	EqualEmit(t, removed[1], 5, 7, "45")
+	EqualInt(t, 5, len(emits))
 	EqualInt(t, 2, len(removed))
 }
 
 func TestContains(t *testing.T) {
 	text := "a123,456b"
-	trie := NewTrie("12", "23", "45", "56")
+	trie := NewTrie("123", "12", "23", "45", "56")
 	emits := trie.FindAll(text, false)
+	t.Log(emits)
 	removed := RemoveContains(emits)
 	t.Log(emits)
 	t.Log(removed)
-	EqualEmit(t, removed[0], 1, 3, "12")
-	EqualEmit(t, removed[1], 2, 4, "23")
-	EqualEmit(t, removed[2], 5, 7, "45")
-	EqualEmit(t, removed[3], 6, 8, "56")
-	EqualInt(t, 4, len(emits))
-	EqualInt(t, 4, len(removed))
+	EqualEmit(t, removed[0], 1, 4, "123")
+	EqualEmit(t, removed[1], 5, 7, "45")
+	EqualEmit(t, removed[2], 6, 8, "56")
+	EqualInt(t, 5, len(emits))
+	EqualInt(t, 3, len(removed))
 }
 
-func TestLoad(t *testing.T) {
-	text := "Hello, World!"
-	trie := NewTrie()
-	trie.Load("hello", "world")
-	emits := trie.FindAll(text, true)
+func TestDuplicate(t *testing.T) {
+	text := "123456"
+	trie := NewTrie("123", "123", "456", "456")
+	emits := trie.FindAll(text, false)
 	t.Log(emits)
-	EqualEmit(t, emits[0], 0, 5, "hello")
-	EqualEmit(t, emits[1], 7, 12, "world")
+	EqualEmit(t, emits[0], 0, 3, "123")
+	EqualEmit(t, emits[1], 3, 6, "456")
 	EqualInt(t, 2, len(emits))
+}
+
+func TestAddKeywords(t *testing.T) {
+	text := "ushers"
+	trie1 := NewTrie("he", "she", "his", "hers")
+	trie2 := NewTrie().AddKeywords("he", "she", "his", "hers")
+	trie3 := NewTrie().AddKeywords("he").AddKeywords("she").AddKeywords("his").AddKeywords("hers")
+	emits1 := trie1.FindAll(text, false)
+	emits2 := trie2.FindAll(text, false)
+	emits3 := trie3.FindAll(text, false)
+	t.Log(emits1)
+	t.Log(emits2)
+	t.Log(emits3)
+	EqualEmits(t, emits1, emits2)
+	EqualEmits(t, emits1, emits3)
+	EqualEmits(t, emits2, emits3)
 }
 
 func EqualInt(t *testing.T, expected int, actual int) {
@@ -146,6 +162,20 @@ func EqualString(t *testing.T, expected string, actual string) {
 func EqualEmit(t *testing.T, emit *Emit, begin int, end int, kw string) {
 	if emit.Begin != begin || emit.End != end || emit.Keyword != kw {
 		t.Error(emit)
+	}
+}
+
+func EqualEmits(t *testing.T, emits1 []*Emit, emits2 []*Emit) {
+	if len(emits1) != len(emits2) {
+		t.Error(emits1, emits2)
+		return
+	}
+	for i := 0; i < len(emits1); i++ {
+		emit1, emit2 := emits1[i], emits2[i]
+		if !emit1.Equals(emit2) {
+			t.Error(emits1, emits2)
+			return
+		}
 	}
 }
 

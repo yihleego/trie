@@ -8,10 +8,11 @@ import (
 	"unicode/utf8"
 )
 
+var present = struct{}{}
+
 type Emit struct {
-	Begin   int
-	End     int
-	Keyword string
+	Begin, End int
+	Keyword    string
 }
 
 func (e *Emit) Length() int {
@@ -52,8 +53,8 @@ func (t *Token) String() string {
 }
 
 type Keyword struct {
-	Value  string
-	Length int
+	value  string
+	length int
 }
 
 type State struct {
@@ -61,6 +62,7 @@ type State struct {
 	success  map[rune]*State
 	failure  *State
 	keywords []*Keyword
+	presents map[string]struct{}
 }
 
 func NewState(depth int) *State {
@@ -124,12 +126,29 @@ func (s *State) addState(c rune) *State {
 }
 
 func (s *State) AddKeyword(keyword string) {
-	s.keywords = append(s.keywords, &Keyword{keyword, utf8.RuneCountInString(keyword)})
+	if s.presents == nil {
+		s.presents = make(map[string]struct{})
+	}
+	_, ok := s.presents[keyword]
+	if !ok {
+		s.keywords = append(s.keywords, &Keyword{keyword, utf8.RuneCountInString(keyword)})
+		s.presents[keyword] = present
+	}
 }
 
 func (s *State) AddKeywords(keywords []*Keyword) {
-	if len(keywords) > 0 {
-		s.keywords = append(s.keywords, keywords...)
+	if len(keywords) == 0 {
+		return
+	}
+	if s.presents == nil {
+		s.presents = make(map[string]struct{})
+	}
+	for _, keyword := range keywords {
+		_, ok := s.presents[keyword.value]
+		if !ok {
+			s.keywords = append(s.keywords, keyword)
+			s.presents[keyword.value] = present
+		}
 	}
 }
 
@@ -139,11 +158,13 @@ type Trie struct {
 
 func NewTrie(keywords ...string) *Trie {
 	t := Trie{root: NewState(0)}
-	t.Load(keywords...)
+	if len(keywords) > 0 {
+		t.AddKeywords(keywords...)
+	}
 	return &t
 }
 
-func (t *Trie) Load(keywords ...string) *Trie {
+func (t *Trie) AddKeywords(keywords ...string) *Trie {
 	for _, keyword := range keywords {
 		if len(keyword) > 0 {
 			t.root.AddState(keyword).AddKeyword(keyword)
@@ -183,7 +204,7 @@ func (t *Trie) FindAll(text string, ignoreCase bool) []*Emit {
 		state = t.nextState(state, r, ignoreCase)
 		for j := 0; j < len(state.keywords); j++ {
 			kw := state.keywords[j]
-			emits = append(emits, &Emit{i + 1 - kw.Length, i + 1, kw.Value})
+			emits = append(emits, &Emit{i + 1 - kw.length, i + 1, kw.value})
 		}
 	}
 	return emits
@@ -197,7 +218,7 @@ func (t *Trie) FindFirst(text string, ignoreCase bool) *Emit {
 		state = t.nextState(state, r, ignoreCase)
 		if len(state.keywords) > 0 {
 			kw := state.keywords[0]
-			return &Emit{i + 1 - kw.Length, i + 1, kw.Value}
+			return &Emit{i + 1 - kw.length, i + 1, kw.value}
 		}
 	}
 	return nil
@@ -277,16 +298,20 @@ func RemoveContains(emits []*Emit) []*Emit {
 
 func removeEmits(emits []*Emit, predicate func(a, b *Emit) bool) []*Emit {
 	el := len(emits)
-	if el <= 1 {
-		return emits
+	if el < 1 {
+		return nil
+	} else if el == 1 {
+		return []*Emit{emits[0]}
 	}
-	sortEmits(emits)
+	replica := make([]*Emit, el)
+	copy(replica, emits)
+	sortEmits(replica)
 	index := 1
+	emit := replica[0]
 	sorted := make([]*Emit, el)
-	sorted[0] = emits[0]
-	emit := emits[0]
+	sorted[0] = emit
 	for i := 1; i < el; i++ {
-		next := emits[i]
+		next := replica[i]
 		if !predicate(emit, next) {
 			sorted[index] = next
 			index++
@@ -298,8 +323,7 @@ func removeEmits(emits []*Emit, predicate func(a, b *Emit) bool) []*Emit {
 
 func sortEmits(emits []*Emit) {
 	sort.Slice(emits, func(i, j int) bool {
-		a := emits[i]
-		b := emits[j]
+		a, b := emits[i], emits[j]
 		if a.Begin != b.Begin {
 			return a.Begin < b.Begin
 		} else {
