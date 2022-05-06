@@ -1,6 +1,6 @@
 # Trie
 
-A Aho-Corasick algorithm based string-searching utility for Go. It supports tokenization, ignoring case, replacing text. So you can use it to find keywords in an article, filter sensitive words, etc. 
+An Aho-Corasick algorithm based string-searching utility for Go. It supports tokenization, ignoring case, replacing text. So you can use it to find keywords in an article, filter sensitive words, etc. 
 
 Implemented in Java：[Trie4j](https://github.com/yihleego/trie4j)
 
