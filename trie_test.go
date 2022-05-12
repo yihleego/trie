@@ -2,6 +2,7 @@ package trie
 
 import (
 	"testing"
+	"unicode/utf8"
 )
 
 func TestFindAll(t *testing.T) {
@@ -145,6 +146,19 @@ func TestAddKeywords(t *testing.T) {
 	EqualEmits(t, emits1, emits2)
 	EqualEmits(t, emits1, emits3)
 	EqualEmits(t, emits2, emits3)
+}
+
+func TestEmoji(t *testing.T) {
+	t.Log("utf8.RuneCountInString(\"🐼\") >>", utf8.RuneCountInString("🐼"))
+	t.Log("len(\"🐼\") >>", len("🐼"))
+	EqualInt(t, 1, utf8.RuneCountInString("🐼"))
+	EqualInt(t, 4, len("🐼"))
+	text := "I love 🐼 very much."
+	trie := NewTrie("🐼", "🐻")
+	emits := trie.FindAll(text, false)
+	t.Log(emits)
+	EqualEmit(t, emits[0], 7, 8, "🐼")
+	EqualInt(t, 1, len(emits))
 }
 
 func EqualInt(t *testing.T, expected int, actual int) {
