@@ -65,10 +65,6 @@ type State struct {
 	presents map[string]struct{}
 }
 
-func NewState(depth int) *State {
-	return &State{depth: depth}
-}
-
 func (s *State) NextState(c rune, ignoreCase bool) *State {
 	next := s.GetState(c, ignoreCase)
 	if next != nil {
@@ -120,7 +116,7 @@ func (s *State) addState(c rune) *State {
 	if exists {
 		return state
 	}
-	ns := NewState(s.depth + 1)
+	ns := &State{depth: s.depth + 1}
 	s.success[c] = ns
 	return ns
 }
@@ -156,8 +152,8 @@ type Trie struct {
 	root *State
 }
 
-func NewTrie(keywords ...string) *Trie {
-	t := Trie{root: NewState(0)}
+func New(keywords ...string) *Trie {
+	t := Trie{root: &State{depth: 0}}
 	if len(keywords) > 0 {
 		t.AddKeywords(keywords...)
 	}

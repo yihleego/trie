@@ -7,7 +7,7 @@ import (
 
 func TestFindAll(t *testing.T) {
 	text := "昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，却道海棠依旧。知否，知否？应是绿肥红瘦。"
-	trie := NewTrie("雨疏", "风骤", "残酒", "卷帘人", "知否")
+	trie := New("雨疏", "风骤", "残酒", "卷帘人", "知否")
 	emits := trie.FindAll(text, false)
 	t.Log(emits)
 	EqualEmit(t, emits[0], 2, 4, "雨疏")
@@ -21,7 +21,7 @@ func TestFindAll(t *testing.T) {
 
 func TestFindFirst(t *testing.T) {
 	text := "昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，却道海棠依旧。知否，知否？应是绿肥红瘦。"
-	trie := NewTrie("雨疏", "风骤", "残酒", "卷帘人", "知否")
+	trie := New("雨疏", "风骤", "残酒", "卷帘人", "知否")
 	emit := trie.FindFirst(text, false)
 	t.Log(emit)
 	EqualEmit(t, emit, 2, 4, "雨疏")
@@ -29,7 +29,7 @@ func TestFindFirst(t *testing.T) {
 
 func TestFindAllIgnoreCase(t *testing.T) {
 	text := "Poetry is what gets lost in translation."
-	trie := NewTrie("poetry", "TRANSLATION")
+	trie := New("poetry", "TRANSLATION")
 	emits := trie.FindAll(text, true)
 	t.Log(emits)
 	EqualEmit(t, emits[0], 0, 6, "poetry")
@@ -39,7 +39,7 @@ func TestFindAllIgnoreCase(t *testing.T) {
 
 func TestFindFirstIgnoreCase(t *testing.T) {
 	text := "Poetry is what gets lost in translation."
-	trie := NewTrie("poetry", "TRANSLATION")
+	trie := New("poetry", "TRANSLATION")
 	emit := trie.FindFirst(text, true)
 	t.Log(emit)
 	EqualEmit(t, emit, 0, 6, "poetry")
@@ -47,7 +47,7 @@ func TestFindFirstIgnoreCase(t *testing.T) {
 
 func TestIgnoreCase(t *testing.T) {
 	text := "TurninG OnCe AgAiN BÖRKÜ"
-	trie := NewTrie("turning", "once", "again", "börkü")
+	trie := New("turning", "once", "again", "börkü")
 	emits := trie.FindAll(text, true)
 	t.Log(emits)
 	EqualEmit(t, emits[0], 0, 7, "turning")
@@ -59,7 +59,7 @@ func TestIgnoreCase(t *testing.T) {
 
 func TestTokenize(t *testing.T) {
 	text := "常记溪亭日暮，沉醉不知归路。兴尽晚回舟，误入藕花深处。争渡，争渡，惊起一滩鸥鹭。"
-	trie := NewTrie("溪亭", "归路", "藕花", "争渡")
+	trie := New("溪亭", "归路", "藕花", "争渡")
 	emits := trie.FindAll(text, false)
 	tokens := Tokenize(emits, text)
 	t.Log(len(emits), emits)
@@ -81,7 +81,7 @@ func TestTokenize(t *testing.T) {
 
 func TestReplace(t *testing.T) {
 	text := "我正在参加砍价，砍到0元就可以免费拿啦。亲~帮我砍一刀呗，咱们一起免费领好货。"
-	trie := NewTrie("0元", "砍一刀", "免费拿", "免费领")
+	trie := New("0元", "砍一刀", "免费拿", "免费领")
 	emits := trie.FindAll(text, false)
 	r1 := Replace(emits, text, "*")
 	r2 := Replace(emits, text, "@#$%^&*")
@@ -95,7 +95,7 @@ func TestReplace(t *testing.T) {
 
 func TestOverlaps(t *testing.T) {
 	text := "a123,456b"
-	trie := NewTrie("123", "12", "23", "45", "56")
+	trie := New("123", "12", "23", "45", "56")
 	emits := trie.FindAll(text, false)
 	t.Log(emits)
 	removed := RemoveOverlaps(emits)
@@ -109,7 +109,7 @@ func TestOverlaps(t *testing.T) {
 
 func TestContains(t *testing.T) {
 	text := "a123,456b"
-	trie := NewTrie("123", "12", "23", "45", "56")
+	trie := New("123", "12", "23", "45", "56")
 	emits := trie.FindAll(text, false)
 	t.Log(emits)
 	removed := RemoveContains(emits)
@@ -124,7 +124,7 @@ func TestContains(t *testing.T) {
 
 func TestDuplicate(t *testing.T) {
 	text := "123456"
-	trie := NewTrie("123", "123", "456", "456")
+	trie := New("123", "123", "456", "456")
 	emits := trie.FindAll(text, false)
 	t.Log(emits)
 	EqualEmit(t, emits[0], 0, 3, "123")
@@ -134,9 +134,9 @@ func TestDuplicate(t *testing.T) {
 
 func TestAddKeywords(t *testing.T) {
 	text := "ushers"
-	trie1 := NewTrie("he", "she", "his", "hers")
-	trie2 := NewTrie().AddKeywords("he", "she", "his", "hers")
-	trie3 := NewTrie().AddKeywords("he").AddKeywords("she").AddKeywords("his").AddKeywords("hers")
+	trie1 := New("he", "she", "his", "hers")
+	trie2 := New().AddKeywords("he", "she", "his", "hers")
+	trie3 := New().AddKeywords("he").AddKeywords("she").AddKeywords("his").AddKeywords("hers")
 	emits1 := trie1.FindAll(text, false)
 	emits2 := trie2.FindAll(text, false)
 	emits3 := trie3.FindAll(text, false)
@@ -154,7 +154,7 @@ func TestEmoji(t *testing.T) {
 	EqualInt(t, 1, utf8.RuneCountInString("🐼"))
 	EqualInt(t, 4, len("🐼"))
 	text := "I love 🐼 very much."
-	trie := NewTrie("🐼", "🐻")
+	trie := New("🐼", "🐻")
 	emits := trie.FindAll(text, false)
 	t.Log(emits)
 	EqualEmit(t, emits[0], 7, 8, "🐼")
