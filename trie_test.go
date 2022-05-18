@@ -1,6 +1,8 @@
 package trie
 
 import (
+	"bufio"
+	"os"
 	"testing"
 	"unicode/utf8"
 )
@@ -159,6 +161,39 @@ func TestEmoji(t *testing.T) {
 	t.Log(emits)
 	EqualEmit(t, emits[0], 7, 8, "🐼")
 	EqualInt(t, 1, len(emits))
+}
+
+func TestFile(t *testing.T) {
+	keywords, err := readFile("keywords.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	text := "请在这里输入关键词"
+	trie := New(keywords...)
+	emits := trie.FindAll(text, false)
+	t.Log(emits)
+}
+
+func readFile(filename string) ([]string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	lines := make([]string, 0, 15000)
+	s := bufio.NewScanner(f)
+	for s.Scan() {
+		lines = append(lines, s.Text())
+	}
+	err = s.Err()
+	if err != nil {
+		return nil, err
+	}
+	err = f.Close()
+	if err != nil {
+		return nil, err
+	}
+	return lines, nil
 }
 
 func EqualInt(t *testing.T, expected int, actual int) {

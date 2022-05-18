@@ -8,8 +8,6 @@ import (
 	"unicode/utf8"
 )
 
-var present = struct{}{}
-
 type Emit struct {
 	Begin, End int
 	Keyword    string
@@ -62,7 +60,6 @@ type State struct {
 	success  map[rune]*State
 	failure  *State
 	keywords []*Keyword
-	presents map[string]struct{}
 }
 
 func (s *State) NextState(c rune, ignoreCase bool) *State {
@@ -121,14 +118,19 @@ func (s *State) addState(c rune) *State {
 	return ns
 }
 
-func (s *State) AddKeyword(keyword string) {
-	if s.presents == nil {
-		s.presents = make(map[string]struct{})
+func (s *State) HasKeyword(keyword string) bool {
+	for _, kw := range s.keywords {
+		if kw.value == keyword {
+			return true
+		}
 	}
-	_, ok := s.presents[keyword]
-	if !ok {
+	return false
+}
+
+func (s *State) AddKeyword(keyword string) {
+	s.ensureKeywords()
+	if !s.HasKeyword(keyword) {
 		s.keywords = append(s.keywords, &Keyword{keyword, utf8.RuneCountInString(keyword)})
-		s.presents[keyword] = present
 	}
 }
 
@@ -136,15 +138,17 @@ func (s *State) AddKeywords(keywords []*Keyword) {
 	if len(keywords) == 0 {
 		return
 	}
-	if s.presents == nil {
-		s.presents = make(map[string]struct{})
-	}
+	s.ensureKeywords()
 	for _, keyword := range keywords {
-		_, ok := s.presents[keyword.value]
-		if !ok {
+		if !s.HasKeyword(keyword.value) {
 			s.keywords = append(s.keywords, keyword)
-			s.presents[keyword.value] = present
 		}
+	}
+}
+
+func (s *State) ensureKeywords() {
+	if s.keywords == nil {
+		s.keywords = make([]*Keyword, 0, 2)
 	}
 }
 
