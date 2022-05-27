@@ -239,26 +239,22 @@ func Tokenize(emits []*Emit, source string) []*Token {
 	if el == 0 {
 		return []*Token{{source, nil}}
 	}
-	count := 0
 	index := 0
 	runes := []rune(source)
-	tokens := make([]*Token, el*2+1)
+	tokens := make([]*Token, 0, el*2+1)
 	for i := 0; i < el; i++ {
 		emit := emits[i]
 		if index < emit.Begin {
-			tokens[count] = &Token{string(runes[index:emit.Begin]), nil}
-			count++
+			tokens = append(tokens, &Token{string(runes[index:emit.Begin]), nil})
 		}
-		tokens[count] = &Token{string(runes[emit.Begin:emit.End]), emit}
-		count++
+		tokens = append(tokens, &Token{string(runes[emit.Begin:emit.End]), emit})
 		index = emit.End
 	}
 	last := emits[el-1]
 	if last.End < utf8.RuneCountInString(source) {
-		tokens[count] = &Token{string(runes[last.End:]), nil}
-		count++
+		tokens = append(tokens, &Token{string(runes[last.End:]), nil})
 	}
-	return tokens[:count]
+	return tokens
 }
 
 func Replace(emits []*Emit, source string, replacement string) string {
@@ -306,19 +302,17 @@ func removeEmits(emits []*Emit, predicate func(a, b *Emit) bool) []*Emit {
 	replica := make([]*Emit, el)
 	copy(replica, emits)
 	sortEmits(replica)
-	index := 1
 	emit := replica[0]
-	sorted := make([]*Emit, el)
-	sorted[0] = emit
+	sorted := make([]*Emit, 0, el)
+	sorted = append(sorted, emit)
 	for i := 1; i < el; i++ {
 		next := replica[i]
 		if !predicate(emit, next) {
-			sorted[index] = next
-			index++
+			sorted = append(sorted, next)
 			emit = next
 		}
 	}
-	return sorted[:index]
+	return sorted
 }
 
 func sortEmits(emits []*Emit) {
