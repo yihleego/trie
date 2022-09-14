@@ -5,11 +5,7 @@
 
 An Aho-Corasick algorithm based string-searching utility for Go. It supports tokenization, ignoring case, replacing text. So you can use it to find keywords in an article, filter sensitive words, etc.
 
-Implemented in Java：[Trie4j](https://github.com/yihleego/trie4j)
-
-基于AC自动机（Aho-Corasick algorithm）实现的关键词、敏感词、非法词、停用词等匹配替换工具，支持结果分词，忽略大小写，替换文本等功能。适用于在文章中查找关键词；过滤聊天、评论、留言中的敏感词等。
-
-Java实现版本：[Trie4j](https://github.com/yihleego/trie4j)
+Implementation in Java：[Trie4j](https://github.com/yihleego/trie4j)
 
 ## Introduction
 
@@ -21,7 +17,7 @@ Java实现版本：[Trie4j](https://github.com/yihleego/trie4j)
 
 ## Usage
 
-### 匹配所有关键词
+### FindAll
 
 ```go
 t := trie.New("雨疏", "风骤", "残酒", "卷帘人", "知否")
@@ -32,7 +28,7 @@ emits := t.FindAll("昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，
 [2:4=雨疏, 4:6=风骤, 11:13=残酒, 16:19=卷帘人, 27:29=知否, 30:32=知否]
 ```
 
-### 匹配首个关键词
+### FindFirst
 
 ```go
 t := trie.New("雨疏", "风骤", "残酒", "卷帘人", "知否")
@@ -43,7 +39,7 @@ emit := t.FindFirst("昨夜雨疏风骤，浓睡不消残酒。试问卷帘人�
 2:4=雨疏
 ```
 
-### 匹配所有关键词 忽略大小写
+### FindAll (Case Insensitive)
 
 ```go
 t := trie.New("poetry", "TRANSLATION")
@@ -54,7 +50,7 @@ emits := t.FindAll("Poetry is what gets lost in translation.", true)
 [0:6=poetry, 28:39=TRANSLATION]
 ```
 
-### 匹配首个关键词 忽略大小写
+### FindFirst (Case Insensitive)
 
 ```go
 t := trie.New("poetry", "TRANSLATION")
@@ -65,7 +61,7 @@ emit := t.FindFirst("Poetry is what gets lost in translation.", true)
 0:6=poetry
 ```
 
-### 切分词
+### Tokenize
 
 ```go
 s := "常记溪亭日暮，沉醉不知归路。兴尽晚回舟，误入藕花深处。争渡，争渡，惊起一滩鸥鹭。"
@@ -78,7 +74,7 @@ tokens := trie.Tokenize(emits, s)
 ["常记", "溪亭(2:4=溪亭)", "日暮，沉醉不知", "归路(11:13=归路)", "。兴尽晚回舟，误入", "藕花(22:24=藕花)", "深处。", "争渡(27:29=争渡)", "，", "争渡(30:32=争渡)", "，惊起一滩鸥鹭。"]
 ```
 
-### 替换关键词
+### Replace
 
 ```go
 s := "我正在参加砍价，砍到0元就可以免费拿啦。亲~帮我砍一刀呗，咱们一起免费领好货。"
@@ -92,10 +88,6 @@ r2 := trie.Replace(emits, s, "@#$%^&*")
 我正在参加砍价，砍到**就可以***啦。亲~帮我***呗，咱们一起***好货。
 我正在参加砍价，砍到%^就可以#$%啦。亲~帮我%^&呗，咱们一起&*@好货。
 ```
-
-## Contact
-
-- [提交问题](https://github.com/yihleego/trie/issues)
 
 ## License
 
